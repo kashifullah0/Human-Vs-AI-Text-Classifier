@@ -31,7 +31,7 @@ class AIHUMAN:
         if st.button("Prediction"):
             word_to_vec = self.we.transform([text])
             prediction = self.model.predict(word_to_vec)
-            if prediction[0] == "0":
+            if prediction[0] == 0:
                 st.warning("AI Generted")
             else:
                 st.success("Human Generted")
