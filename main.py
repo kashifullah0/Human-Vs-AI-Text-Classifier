@@ -2,41 +2,42 @@ import streamlit as st
 import joblib
 import string
 import nltk
+
+# Ensure necessary resources are downloaded
 nltk.download('stopwords')
+nltk.download('punkt')
+
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-
+from nltk.tokenize import word_tokenize
 
 class AIHUMAN:
     
     def __init__(self):
-        self.we = joblib.load("wv.pkl")
+        self.vectorizer = joblib.load("wv.pkl")
         self.model = joblib.load("model.pkl")
-        self.UI = self.user_interface()
+        self.run_app()
 
-    def user_interface(self):
+    def preprocess_text(self, text):
         stop_words = set(stopwords.words("english"))
-        punctuations = set(string.punctuation)
         ps = PorterStemmer()
-        st.title("AI VS Human Text Classfier")
-        text = st.text_area("Enter your Text")
-        tokens = nltk.word_tokenize(text.lower())
-        
+        tokens = word_tokenize(text.lower())
         filtered_tokens = [ps.stem(token) for token in tokens if token.isalnum() and token not in stop_words]
-        text = " ".join(filtered_tokens)
-        word_to_vec = self.we.transform([text])
-        prediction = self.model.predict(word_to_vec)
-        if st.button("Prediction"):
-            word_to_vec = self.we.transform([text])
-            prediction = self.model.predict(word_to_vec)
+        return " ".join(filtered_tokens)
+
+    def run_app(self):
+        st.title("AI vs Human Text Classifier")
+        user_input = st.text_area("Enter your text:")
+
+        if st.button("Predict"):
+            processed_text = self.preprocess_text(user_input)
+            vectorized_text = self.vectorizer.transform([processed_text])
+            prediction = self.model.predict(vectorized_text)
+
             if prediction[0] == 0:
-                st.warning("AI Generted")
+                st.warning("The text is likely *AI-generated*.")
             else:
-                st.success("Human Generted")
-
-
+                st.success("The text is likely *Human-written*.")
 
 if __name__ == "__main__":
-    app = AIHUMAN()
+    AIHUMAN()
